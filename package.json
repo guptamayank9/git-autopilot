@@ -1,0 +1,25 @@
+{
+  "name": "git-autopilot-ai",
+  "version": "1.0.0",
+  "description": "Local AI agent that watches your project and automatically runs git add, writes the commit message with AI, commits and pushes.",
+  "bin": {
+    "git-autopilot": "bin/git-autopilot.js"
+  },
+  "files": ["bin", "lib", "README.md", "LICENSE", ".env.example"],
+  "scripts": {
+    "test": "node test/smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["git", "automation", "ai", "cli", "commit", "gemini", "ollama", "auto-commit"],
+  "author": "Mayank Kumar Gupta",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guptamayank9/git-autopilot.git"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0"
+  }
+}
