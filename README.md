@@ -55,40 +55,34 @@ flowchart LR
 
 ## Quick start
 
-**1. Get a free Gemini API key** at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
-
-**2. Save it once, for all your projects:**
+Open a terminal **inside your project folder** and run one command:
 
 ```bash
-# macOS / Linux
-echo "GEMINI_API_KEY=your_key_here" > ~/.git-autopilot.env
+cd your-project
+npx git-autopilot-ai
 ```
 
-```powershell
-# Windows (PowerShell)
-"GEMINI_API_KEY=your_key_here" | Out-File -Encoding ascii $HOME\.git-autopilot.env
-```
+That's it. The first time, it asks you to paste a free Gemini key
+(get one in 20 seconds at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)),
+saves it, and never asks again. Then it starts watching your project.
+Press `Ctrl+C` to stop.
 
-**3. Try it safely.** This only prints the commit message and changes nothing:
+Want to look before it touches anything? Add `--dry-run`. It only prints the commit message:
 
 ```bash
-npx git-autopilot-ai /path/to/your/project --once --dry-run
-```
-
-**4. Run it for real.** It keeps watching until you press `Ctrl+C`:
-
-```bash
-npx git-autopilot-ai /path/to/your/project
+npx git-autopilot-ai --once --dry-run
 ```
 
 > **Requirements:** Node.js 18+, and a project that is already a git repository with a remote
 > (`git remote -v`). Make sure a normal `git push` works once before using the agent.
+> Pressing Enter at the key prompt skips the AI and uses simple file-name messages.
 
 ### Other ways to install
 
 ```bash
 # Straight from GitHub (no npm publish needed)
-npx github:guptamayank9/git-autopilot /path/to/your/project
+cd your-project
+npx github:guptamayank9/git-autopilot
 
 # Install globally, then run from inside any project
 npm install -g git-autopilot-ai
@@ -120,6 +114,7 @@ git-autopilot --branch auto-save --check "npm run build"
 | `--provider <name>` | `gemini`, `ollama`, `openrouter` or `none` (default: auto-detect) |
 | `--model <name>` | Use a different AI model |
 | `--files-only` | Send only file names to the AI, never your code |
+| `--setup` | Enter or change your Gemini key (also runs automatically on first use) |
 | `-h`, `--help` / `-v`, `--version` | Help and version |
 
 ## AI providers
@@ -193,7 +188,7 @@ Press `Ctrl+C` in the terminal where it is running.
 | `is not a git repository` | Run it on your project folder, not on the git-autopilot folder |
 | Path with spaces on Windows | Wrap the path in quotes: `"C:\Users\me\My Project"` |
 | `AI request failed (404 ...)` | The model name is outdated. Pass a current one with `--model` |
-| `GEMINI_API_KEY is missing` | Create `~/.git-autopilot.env` (see Quick start) |
+| `GEMINI_API_KEY is missing` | Run `npx git-autopilot-ai --setup` |
 | Push is denied or asks for login | Run `git push` manually once, sign in, then retry |
 | `Rebase conflict` | Run `git pull`, resolve the conflicts, then save a file again |
 | Vercel/Netlify deployment blocked | Your commit email may not match your GitHub account. Check `git config user.email` |

@@ -102,4 +102,20 @@ const ok = (name) => console.log(`ok ${++n} - ${name}`);
   assert.strictEqual(bad.status, 1);
   ok("--help works and non-git folders are rejected");
 }
+// 7) --setup saves the key to the home folder and keeps other lines
+{
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "ga-home-"));
+  const file = path.join(home, ".git-autopilot.env");
+  fs.writeFileSync(file, "OLLAMA_URL=http://localhost:1234\n");
+  const r = spawnSync("node", [CLI, "--setup"], {
+    input: "AIzaFAKEKEY123\n",
+    encoding: "utf8",
+    env: { ...process.env, HOME: home, USERPROFILE: home, GEMINI_API_KEY: "", OPENROUTER_API_KEY: "" },
+  });
+  assert.strictEqual(r.status, 0, r.stdout + r.stderr);
+  const saved = fs.readFileSync(file, "utf8");
+  assert.ok(saved.includes("GEMINI_API_KEY=AIzaFAKEKEY123"));
+  assert.ok(saved.includes("OLLAMA_URL=http://localhost:1234"));
+  ok("--setup saves the key once and keeps other settings");
+}
 console.log("\nAll tests passed.");

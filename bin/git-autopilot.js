@@ -3,7 +3,7 @@
 const path = require("path");
 const { execFileSync } = require("child_process");
 const pkg = require("../package.json");
-const { loadConfigFiles } = require("../lib/config");
+const { loadConfigFiles, saveToHome } = require("../lib/config");
 const { PROVIDERS, DEFAULT_MODELS } = require("../lib/ai");
 const { createRunner } = require("../lib/runner");
 
@@ -22,6 +22,7 @@ Options:
   --provider <name>   gemini | ollama | openrouter | none   (default: auto-detect)
   --model <name>      Override the AI model
   --files-only        Send only file names to the AI, never your code
+  --setup             Enter or change your free Gemini key (asked automatically on first run)
   -h, --help          Show this help
   -v, --version       Show version
 
@@ -36,7 +37,7 @@ const fail = (msg) => {
 };
 
 function parseArgs(argv) {
-  const o = { path: null, once: false, dryRun: false, delay: 30, branch: null, check: null, provider: null, model: null, filesOnly: false };
+  const o = { path: null, once: false, dryRun: false, delay: 30, branch: null, check: null, provider: null, model: null, filesOnly: false, setup: false };
   const val = (i, name) => {
     if (i + 1 >= argv.length) fail(`${name} needs a value`);
     return argv[i + 1];
@@ -55,6 +56,7 @@ function parseArgs(argv) {
       case "--once": o.once = true; break;
       case "--dry-run": o.dryRun = true; break;
       case "--files-only": o.filesOnly = true; break;
+      case "--setup": o.setup = true; break;
       case "--delay": o.delay = Number(val(i, a)); i++; break;
       case "--branch": o.branch = val(i, a); i++; break;
       case "--check": o.check = val(i, a); i++; break;
@@ -69,9 +71,33 @@ function parseArgs(argv) {
   return o;
 }
 
+async function runSetup() {
+  const rl = require("readline").createInterface({ input: process.stdin, output: process.stdout });
+  const ask = (q) => new Promise((resolve) => rl.question(q, resolve));
+  console.log("\n👋 First-time setup (asked only once, takes 20 seconds)");
+  console.log("To get AI-written commit messages you need a FREE Gemini key:");
+  console.log("  1. Open https://aistudio.google.com/apikey");
+  console.log("  2. Click 'Create API key' and copy it\n");
+  const key = (await ask("Paste your key here (or just press Enter to skip the AI): ")).trim();
+  rl.close();
+  if (!key) {
+    const f = saveToHome({ AUTOPILOT_PROVIDER: "none" });
+    console.log(`\nOK, no AI. Commit messages will be built from file names.\nTo add a key later, run: git-autopilot --setup  (saved in ${f})\n`);
+    return;
+  }
+  if (!/^AIza/.test(key)) console.log("Note: Gemini keys usually start with 'AIza'. Saving anyway.");
+  const f = saveToHome({ GEMINI_API_KEY: key });
+  console.log(`\n✅ Saved to ${f}. You will not be asked again.\n`);
+}
+
 async function main() {
   const o = parseArgs(process.argv.slice(2));
   const repo = path.resolve(o.path || process.cwd());
+
+  if (o.setup && process.argv.slice(2).length === 1) {
+    await runSetup();
+    process.exit(0);
+  }
 
   try {
     execFileSync("git", ["rev-parse", "--is-inside-work-tree"], { cwd: repo, stdio: "ignore" });
@@ -80,6 +106,13 @@ async function main() {
   }
 
   loadConfigFiles(repo);
+
+  const hasChoice = o.provider || process.env.AUTOPILOT_PROVIDER || process.env.GEMINI_API_KEY || process.env.OPENROUTER_API_KEY;
+  if (o.setup) {
+    await runSetup();
+  } else if (!hasChoice && process.stdin.isTTY && process.stdout.isTTY) {
+    await runSetup();
+  }
 
   const provider =
     o.provider ||

@@ -1,6 +1,6 @@
 {
   "name": "git-autopilot-ai",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local AI agent that watches your project and automatically runs git add, writes the commit message with AI, commits and pushes.",
   "bin": {
     "git-autopilot": "bin/git-autopilot.js"
